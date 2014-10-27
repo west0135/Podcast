@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Ratchet template page</title>
+
+    <!-- Sets initial viewport load and disables zooming  -->
+    <!--<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">-->
+
+    <!-- Makes your prototype chrome-less once bookmarked to your phone's home screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <!-- Include the compiled Ratchet CSS -->
+    <link href="css/ratchet.css" rel="stylesheet"/>
+	<link href="css/ratchet-theme-android.min.css" rel="stylesheet"/>
+    <!-- Include the compiled Ratchet JS -->
+    <script src="js/ratchet.min.js"></script>
+	<script type="text/javascript" src="js/index.js"></script>
+	<script src="cordova.js"></script>
+	  
+  </head>
+  <body>
+	
+	<div id="homePage" class="Active content">
+	  <header class="bar bar-nav">
+		<h1 class="title">Podcast Selection</h1>
+	  </header>
+
+		<h2 style="padding-top:45px;"></h2>
+		
+		<form ACTION="" METHOD="GET" style="padding:10px 30px 0px 30px">
+			<input type="search" name="search" placeholder="Search">
+			<button type="button" class="btn btn-primary btn-block" onClick="captureForm(this.form)">Search URL</button>
+		</form>
+		
+		<ul class="table-view-cell media">
+			<li class="table-view-cell media">
+			  <a class="navigate-right" data-transition="slide-in" id="btn">
+				<img class="media-object pull-left" src="http://placehold.it/64x64" alt="Placeholder image for Argo's poster">
+				<div class="media-body">
+				  Argo
+				  <p>Lorem ipsum dolor sit amet, consectetur.</p>
+				</div>
+			  </a>
+			</li>
+		</ul>
+	</div>
+	  
+	<div id="podPage" class=" notActive1 content">
+	 	<header class="bar bar-nav" style="padding-bottom:20px;">
+			<h1 class="title">  <span class="icon icon-left-nav btn-primary" id="btn2"></span> Selected Podcast</h1>
+	  	</header>
+
+		<ul class="table-view-cell media" style="padding-top: 45px">
+			<li class="table-view-cell media">
+			  <a class="navigate-right" data-transition="slide-in" id="btn2">
+				<img class="media-object pull-left" src="http://placehold.it/64x64" alt="Placeholder image for Argo's poster">
+				<div class="media-body">
+				  werego
+				  <p>Lwerwertur.</p>
+				</div>
+			  </a>
+			</li>
+		</ul>	
+	</div>
+
+  </body>
+</html>
