@@ -19,7 +19,7 @@ function onDeviceReady() {
 	document.querySelector("#btn2").addEventListener("touchstart", showHomePage);
 	document.addEventListener("offline", onOffline, false);
 	document.addEventListener("online", onOnline, false);
-    loadXML();
+    loadXML();//Just to test the loadXML function
     
     //var buttonToClick = document.querySelector("#downloadImage");
     //buttonToClick.addEventListener('click', downloadFileStart, false);
@@ -73,25 +73,6 @@ function onOnline() {
 	console.log('Online ' + networkState);
 	
 }
-///////////////////// OLD CODE /////////////////////
-/**
-function test(){
-    var input = (document.querySelector("#input").value);
-    
-    //var directoryExists = checkDirectory(input);
-    checkDirectory(input);
-    console.log(foundDir);
-    //For some reason foundDir only updates on next click
-    if (!foundDir){
-        alert("Directory did not exist");
-        createDirectory(input);
-    }
-    else{
-        alert("Directory did exist");
-    }
-    
-    document.querySelector("#input").value = "";
-}*/
 
 ///////////////////// TEST FOR DIRECTORY INPUT /////////////////////
 function directorySequence(){
@@ -148,7 +129,7 @@ function checkDirectory(input){
     }
 }
 
-///////////////////// Testing for Downloadfile /////////////////////
+///////////////////// Testing for Downloadfile (NOT IN USE) /////////////////////
 function downloadFileStart(){
     downloadFile("http://developer.android.com/assets/images/home/ics-android.png","file://sdcard/ics-android.png");
 }
@@ -226,9 +207,9 @@ function parseXML(txt) {
     pod.episodes[0].link = poop[0].getElementsByTagName('origEnclosureLink')[0].childNodes[0].nodeValue;
     pod.episodes[0].title = poop[0].getElementsByTagName('title')[0].childNodes[0].nodeValue;
     pod.episodes[0].duration = poop[0].getElementsByTagName('duration')[0].childNodes[0].nodeValue;
-    //pod.episodes[1].link = poop[1].getElementsByTagName('origEnclosureLink')[1].childNodes[1].nodeValue;
-    //pod.episodes[1].title = poop[1].getElementsByTagName('title')[1].childNodes[1].nodeValue;
-    //pod.episodes[1].duration = poop[1].getElementsByTagName('duration')[1].childNodes[1].nodeValue;
+    pod.episodes[1].link = poop[1].getElementsByTagName('origEnclosureLink')[0].childNodes[0].nodeValue;
+    pod.episodes[1].title = poop[1].getElementsByTagName('title')[0].childNodes[0].nodeValue;
+    pod.episodes[1].duration = poop[1].getElementsByTagName('duration')[0].childNodes[0].nodeValue;
     //pod.episodes[0].thumb = 
     
     
@@ -245,22 +226,17 @@ function parseXML(txt) {
 ////////////////// WORK IN PROGRESS//////////////////
 function managePodcasts(pod){
 
-//test object
+//------OBJECT TEMPLATE-------//
     //var pod = {title:"podcast", episodes:[{title:"ep1", duration:"1:00", thumb:"th.jpg", link:"link.mp3"},{title:"ep2", duration:"2:00", thumb:"th2.jpg", link:"link2.mp3"}]}
     
     console.log(pod.title);
     console.log(pod.episodes[0].title);
-//title of podcast
-    //title of episode 0
-    //duration of 0
-    //thumbnail link of 0
-    //link for episode 0
-    
-    //repeat above for 1
     console.log("about to check dir");
+    
     if (!checkDirectory(pod.title)){
         createDirectory(pod.title);
         downloadFile(pod.episodes[0].link, ("file://sdcard/"+pod.title));
+        downloadFile(pod.episodes[1].link, ("file://sdcard/"+pod.title+"2"));
     }
     
     else{
