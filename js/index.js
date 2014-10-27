@@ -135,6 +135,9 @@ function downloadFileStart(){
 }
 
 ///////////////////// Download a File /////////////////////
+
+/****files are saved to /data/data/io.appname/
+*/
 function downloadFile(linkToGrab, locationToPlace){
     var localPath;
     window.requestFileSystem(LocalFileSystem.PERSISTENT, 0,
@@ -156,7 +159,7 @@ function downloadFile(linkToGrab, locationToPlace){
                         function(error) {
                             console.log("download error source " + error.source);
                             console.log("download error target " + error.target);
-                            console.log("upload error code: " + error.code);
+                            console.log("error code: " + error.code);
                         }
                     );
                 },fail
@@ -201,21 +204,21 @@ function parseXML(txt) {
     var parser = new DOMParser();
     var xmlDoc = parser.parseFromString(txt, "text/xml");
     console.log(xmlDoc);
-    var poop = xmlDoc.getElementsByTagName('item');
+    var itemList = xmlDoc.getElementsByTagName('item');
     
     pod.title = xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue;
-    pod.episodes[0].link = poop[0].getElementsByTagName('origEnclosureLink')[0].childNodes[0].nodeValue;
-    pod.episodes[0].title = poop[0].getElementsByTagName('title')[0].childNodes[0].nodeValue;
-    pod.episodes[0].duration = poop[0].getElementsByTagName('duration')[0].childNodes[0].nodeValue;
-    pod.episodes[1].link = poop[1].getElementsByTagName('origEnclosureLink')[0].childNodes[0].nodeValue;
-    pod.episodes[1].title = poop[1].getElementsByTagName('title')[0].childNodes[0].nodeValue;
-    pod.episodes[1].duration = poop[1].getElementsByTagName('duration')[0].childNodes[0].nodeValue;
+    pod.episodes[0].link = itemList[0].getElementsByTagName('origEnclosureLink')[0].childNodes[0].nodeValue;
+    pod.episodes[0].title = itemList[0].getElementsByTagName('title')[0].childNodes[0].nodeValue;
+    pod.episodes[0].duration = itemList[0].getElementsByTagName('duration')[0].childNodes[0].nodeValue;
+    pod.episodes[1].link = itemList[1].getElementsByTagName('origEnclosureLink')[0].childNodes[0].nodeValue;
+    pod.episodes[1].title = itemList[1].getElementsByTagName('title')[0].childNodes[0].nodeValue;
+    pod.episodes[1].duration = itemList[1].getElementsByTagName('duration')[0].childNodes[0].nodeValue;
     //pod.episodes[0].thumb = 
     
     
-    console.log("episode title: "+poop[0].getElementsByTagName('title')[0].childNodes[0].nodeValue);
-    console.log("episode duration: "+poop[0].getElementsByTagName('duration')[0].childNodes[0].nodeValue);
-    console.log("episode link: "+poop[0].getElementsByTagName('origEnclosureLink')[0].childNodes[0].nodeValue);
+    console.log("episode title: "+itemList[0].getElementsByTagName('title')[0].childNodes[0].nodeValue);
+    console.log("episode duration: "+itemList[0].getElementsByTagName('duration')[0].childNodes[0].nodeValue);
+    console.log("episode link: "+itemList[0].getElementsByTagName('origEnclosureLink')[0].childNodes[0].nodeValue);
     //console.log("Title: "+xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue);
     
     managePodcasts(pod);
@@ -225,7 +228,16 @@ function parseXML(txt) {
 
 ////////////////// WORK IN PROGRESS//////////////////
 function managePodcasts(pod){
-
+/*TODO: 
+- find better naming convention for podcast episodes?
+- need to make localstorage object to save podcast properties
+- localstorage object could have a boolean to say if files were successfully downloaded
+- get thumbnail(s) and store them with podcasts
+- implement localstorage checks instead of directoryexisting checks
+*/
+    
+    
+    
 //------OBJECT TEMPLATE-------//
     //var pod = {title:"podcast", episodes:[{title:"ep1", duration:"1:00", thumb:"th.jpg", link:"link.mp3"},{title:"ep2", duration:"2:00", thumb:"th2.jpg", link:"link2.mp3"}]}
     
@@ -235,12 +247,23 @@ function managePodcasts(pod){
     
     if (!checkDirectory(pod.title)){
         createDirectory(pod.title);
-        downloadFile(pod.episodes[0].link, ("file://sdcard/"+pod.title));
-        downloadFile(pod.episodes[1].link, ("file://sdcard/"+pod.title+"2"));
+        downloadFile(pod.episodes[0].link, (pod.title+"/episode1.mp3"));
+        downloadFile(pod.episodes[1].link, (pod.title+"/episode2.mp3"));
     }
     
     else{
         alert("You already have this podcast");
     }
+    
+//USE THIS FOR LOCALSTORAGE
+/*var testObject = { 'one': 1, 'two': 2, 'three': 3 };
 
+// Put the object into storage
+localStorage.setItem('testObject', JSON.stringify(testObject));
+
+// Retrieve the object from storage
+var retrievedObject = localStorage.getItem('testObject');
+
+console.log('retrievedObject: ', JSON.parse(retrievedObject));*/
+    
 }
