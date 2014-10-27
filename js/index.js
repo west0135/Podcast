@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", init);
-// Fuckin right bud 
+
 //////////////////// Global Variables ///////////////
 var networkState = null;
 var searchURL = "";
@@ -19,6 +19,7 @@ function onDeviceReady() {
 	document.querySelector("#btn2").addEventListener("touchstart", showHomePage);
 	document.addEventListener("offline", onOffline, false);
 	document.addEventListener("online", onOnline, false);
+    loadXML();
     
     //var buttonToClick = document.querySelector("#downloadImage");
     //buttonToClick.addEventListener('click', downloadFileStart, false);
@@ -129,15 +130,22 @@ function checkDirectory(input){
     function onGetDirectorySuccess(dir) { 
         console.log("Found Directory");
         foundDir = true;
-        alert("Directory did exist");
+        console.log("Directory did exist");
     } 
 
     function onGetDirectoryFail(error) { 
         console.log("Did not find directory");
         foundDir = false;
-        alert("Directory did not exist");
-        createDirectory(input);
+        console.log("Directory did not exist");
+        //createDirectory(input);
     } 
+    
+    if (foundDir){
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
 ///////////////////// Testing for Downloadfile /////////////////////
@@ -180,4 +188,83 @@ function showLink(url){
 }
 function fail(evt) {
     console.log(evt.target.error.code);
+}
+
+///////////////////// Fetch XML /////////////////////
+function loadXML() {
+    console.log("Loading xml");
+    var xmlhttp;
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("GET", "http://feeds.feedburner.com/ThrillingAdventureHour?fmt=xml", false);
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 ) {
+           if(xmlhttp.status == 200){
+               console.log(xmlhttp.responseText);
+               parseXML(xmlhttp.responseText);
+           }
+           else if(xmlhttp.status == 400) {
+              console.log('There was an error 400')
+           }
+           else {
+               console.log('something else other than 200 was returned')
+               console.log(xmlhttp.status);
+           }
+        }
+    }
+    xmlhttp.send();
+}
+
+///////////////////// Parse XML /////////////////////
+function parseXML(txt) {
+    var pod = {title:"", episodes:[{title:"", duration:"", thumb:"", link:""},{title:"", duration:"", thumb:"", link:""}]};
+    var parser = new DOMParser();
+    var xmlDoc = parser.parseFromString(txt, "text/xml");
+    console.log(xmlDoc);
+    var poop = xmlDoc.getElementsByTagName('item');
+    
+    pod.title = xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue;
+    pod.episodes[0].link = poop[0].getElementsByTagName('origEnclosureLink')[0].childNodes[0].nodeValue;
+    pod.episodes[0].title = poop[0].getElementsByTagName('title')[0].childNodes[0].nodeValue;
+    pod.episodes[0].duration = poop[0].getElementsByTagName('duration')[0].childNodes[0].nodeValue;
+    //pod.episodes[1].link = poop[1].getElementsByTagName('origEnclosureLink')[1].childNodes[1].nodeValue;
+    //pod.episodes[1].title = poop[1].getElementsByTagName('title')[1].childNodes[1].nodeValue;
+    //pod.episodes[1].duration = poop[1].getElementsByTagName('duration')[1].childNodes[1].nodeValue;
+    //pod.episodes[0].thumb = 
+    
+    
+    console.log("episode title: "+poop[0].getElementsByTagName('title')[0].childNodes[0].nodeValue);
+    console.log("episode duration: "+poop[0].getElementsByTagName('duration')[0].childNodes[0].nodeValue);
+    console.log("episode link: "+poop[0].getElementsByTagName('origEnclosureLink')[0].childNodes[0].nodeValue);
+    //console.log("Title: "+xmlDoc.getElementsByTagName("title")[0].childNodes[0].nodeValue);
+    
+    managePodcasts(pod);
+   //downloadFile(episode1Link, podcastTitle);
+
+}
+
+////////////////// WORK IN PROGRESS//////////////////
+function managePodcasts(pod){
+
+//test object
+    //var pod = {title:"podcast", episodes:[{title:"ep1", duration:"1:00", thumb:"th.jpg", link:"link.mp3"},{title:"ep2", duration:"2:00", thumb:"th2.jpg", link:"link2.mp3"}]}
+    
+    console.log(pod.title);
+    console.log(pod.episodes[0].title);
+//title of podcast
+    //title of episode 0
+    //duration of 0
+    //thumbnail link of 0
+    //link for episode 0
+    
+    //repeat above for 1
+    console.log("about to check dir");
+    if (!checkDirectory(pod.title)){
+        createDirectory(pod.title);
+        downloadFile(pod.episodes[0].link, ("file://sdcard/"+pod.title));
+    }
+    
+    else{
+        alert("You already have this podcast");
+    }
+
 }
