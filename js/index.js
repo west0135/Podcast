@@ -19,7 +19,7 @@ function onDeviceReady() {
 	document.querySelector("#btn2").addEventListener("touchstart", showHomePage);
 	document.addEventListener("offline", onOffline, false);
 	document.addEventListener("online", onOnline, false);
-    loadXML();//Just to test the loadXML function
+    //loadXML();//Just to test the loadXML function
     
     //var buttonToClick = document.querySelector("#downloadImage");
     //buttonToClick.addEventListener('click', downloadFileStart, false);
@@ -136,7 +136,7 @@ function downloadFileStart(){
 
 ///////////////////// Download a File /////////////////////
 
-/****files are saved to /data/data/io.appname/
+/****files are saved to /data/data/io.appname/podcastname
 */
 function downloadFile(linkToGrab, locationToPlace){
     var localPath;
@@ -245,16 +245,18 @@ function managePodcasts(pod){
     console.log(pod.episodes[0].title);
     console.log("about to check dir");
     
-    if (!checkDirectory(pod.title)){
+    if (!checkIfExists(pod.title)){
         createDirectory(pod.title);
         downloadFile(pod.episodes[0].link, (pod.title+"/episode1.mp3"));
         downloadFile(pod.episodes[1].link, (pod.title+"/episode2.mp3"));
+        savePodcastData(pod);
     }
     
     else{
         alert("You already have this podcast");
     }
     
+
 //USE THIS FOR LOCALSTORAGE
 /*var testObject = { 'one': 1, 'two': 2, 'three': 3 };
 
@@ -266,4 +268,102 @@ var retrievedObject = localStorage.getItem('testObject');
 
 console.log('retrievedObject: ', JSON.parse(retrievedObject));*/
     
+}
+
+function checkIfExists(title){
+
+    var podExists = false;
+    
+    if (localStorage.getItem('podcastData')){
+        var retrievedObject = localStorage.getItem('podcastData');
+        var podcastObject = JSON.parse(retrievedObject);
+        
+        for(var i = 0; i < podcastObject.podcasts.length; i++){
+            if (podcastObject.podcasts[i].title == title){
+                podExists = true;
+            }
+        }
+        
+        if (podExists){
+            return true;
+        }
+        
+        else{
+            return false;
+        }
+    }
+    
+    else{
+        return false;
+    }
+
+}
+
+function savePodcastData(pod){
+
+    var retrievedObject = "";
+    var podcastList = "";
+    
+    if (localStorage.getItem('podcastData')){
+        retrievedObject = localStorage.getItem('podcastData');
+        console.log("retrieved object successfully");
+        podcastList = JSON.parse(retrievedObject);
+        podcastList.podcasts.push(pod);
+        console.log("pushed to array");
+    }
+    
+    else{
+        podcastList = {podcasts:[]};
+        podcastList.podcasts.push(pod);
+        console.log("created podcast list");
+    }
+    
+    localStorage.setItem('podcastData', JSON.stringify(podcastList));
+    console.log("set local storage successfully");
+    
+}
+
+
+function localStorageTest(){
+    
+    pod = {title:"podcast", 
+                episodes:[
+                    {title:"ep1", duration:"1:00", thumb:"th.jpg", link:"link.mp3"},
+                    {title:"ep2", duration:"2:00", thumb:"th2.jpg", link:"link2.mp3"}
+                ]
+                }
+    
+    savePodcastData(pod);
+    /*
+    var podcastData = {
+        podcasts:[
+            
+                {title:"podcast", 
+                episodes:[
+                    {title:"ep1", duration:"1:00", thumb:"th.jpg", link:"link.mp3"},
+                    {title:"ep2", duration:"2:00", thumb:"th2.jpg", link:"link2.mp3"}
+                ]
+                }
+            
+        ]
+    };
+    
+
+    podcastData.podcasts.push({title:"podcast2", 
+                episodes:[
+                    {title:"ep12", duration:"1:00", thumb:"th.jpg", link:"link.mp3"},
+                    {title:"ep22", duration:"2:00", thumb:"th2.jpg", link:"link2.mp3"}
+                ]
+                });
+    
+
+    
+    localStorage.setItem('podcastData', JSON.stringify(podcastData));
+    var retrievedObject = localStorage.getItem('podcastData');
+    
+    var podcastData2 = JSON.parse(retrievedObject);
+    alert(podcastData2.podcasts[1].title);
+    alert(podcastData2.podcasts[1].episodes[0].title);
+    alert(podcastData2.podcasts[1].episodes[1].title);
+  */  
 }
