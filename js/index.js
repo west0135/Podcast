@@ -7,6 +7,10 @@
 - find better naming convention for podcast episodes?
 */
 
+// Fix event handlers
+
+
+
 window.addEventListener("DOMContentLoaded", init);
 
 //////////////////// Global Variables ///////////////
