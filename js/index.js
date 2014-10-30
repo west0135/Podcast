@@ -7,7 +7,6 @@
 - find better naming convention for podcast episodes?
 */
 
-//Dansfasfsfasfasdfrrrrrrrrrrr
 
 
 window.addEventListener("DOMContentLoaded", init);
