@@ -135,12 +135,6 @@ function onOnline() {
     }	
 }
 
-///////////////////// TEST FOR DIRECTORY INPUT /////////////////////
-function directorySequence(){
-    var input = (document.querySelector("#input").value);
-    checkDirectory(input);
-}
-
 ///////////////////// Create a Directory /////////////////////
 function createDirectory(input){
     window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onRequestFileSystemSuccess, null); 
@@ -188,11 +182,6 @@ function checkDirectory(input){
     else{
         return false;
     }
-}
-
-///////////////////// Testing for Downloadfile (NOT IN USE) /////////////////////
-function downloadFileStart(){
-    downloadFile("http://developer.android.com/assets/images/home/ics-android.png","file://sdcard/ics-android.png");
 }
 
 ///////////////////// Download a File /////////////////////
@@ -365,49 +354,4 @@ function savePodcastData(pod){
     console.log("set local storage successfully");
     
     displayPodcasts();
-}
-
-////////////////// Test ///////////////////////
-function localStorageTest(){
-    
-    pod = {title:"podcast", 
-                episodes:[
-                    {title:"ep1", duration:"1:00", thumb:"th.jpg", link:"link.mp3"},
-                    {title:"ep2", duration:"2:00", thumb:"th2.jpg", link:"link2.mp3"}
-                ]
-            }
-    
-    savePodcastData(pod);
-    /*
-    var podcastData = {
-        podcasts:[
-            
-                {title:"podcast", 
-                episodes:[
-                    {title:"ep1", duration:"1:00", thumb:"th.jpg", link:"link.mp3"},
-                    {title:"ep2", duration:"2:00", thumb:"th2.jpg", link:"link2.mp3"}
-                ]
-                }
-            
-        ]
-    };
-    
-
-    podcastData.podcasts.push({title:"podcast2", 
-                episodes:[
-                    {title:"ep12", duration:"1:00", thumb:"th.jpg", link:"link.mp3"},
-                    {title:"ep22", duration:"2:00", thumb:"th2.jpg", link:"link2.mp3"}
-                ]
-                });
-    
-
-    
-    localStorage.setItem('podcastData', JSON.stringify(podcastData));
-    var retrievedObject = localStorage.getItem('podcastData');
-    
-    var podcastData2 = JSON.parse(retrievedObject);
-    alert(podcastData2.podcasts[1].title);
-    alert(podcastData2.podcasts[1].episodes[0].title);
-    alert(podcastData2.podcasts[1].episodes[1].title);
-  */  
 }
