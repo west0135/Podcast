@@ -7,8 +7,6 @@
 - find better naming convention for podcast episodes?
 */
 
-// Connor Becker is not pissed off
-
 
 
 window.addEventListener("DOMContentLoaded", init);
