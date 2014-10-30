@@ -25,12 +25,11 @@ function onDeviceReady() {
     // Now safe to use device APIs
 	console.log("Device Ready!!");
 	// Event listeners
-	document.querySelector("#btn").addEventListener("touchstart", showPodcastPage);
 	document.querySelector("#btn2").addEventListener("touchstart", showHomePage);
 	document.addEventListener("offline", onOffline, false);
 	document.addEventListener("online", onOnline, false);
     //loadXML();//Just to test the loadXML function
-    
+    displayPodcasts();
     //var buttonToClick = document.querySelector("#downloadImage");
     //buttonToClick.addEventListener('click', downloadFileStart, false);
 	
@@ -50,6 +49,44 @@ function showHomePage(ev){
 	document.querySelector('#homePage').className = "Active1 content";
 	
 }
+
+/////////////////// Page Setup ////////////////////
+function displayPodcasts(){
+	console.log("display podcasts");
+	if (localStorage.getItem('podcastData')){
+		console.log('exists');
+		
+		//Clear existing data
+		var podcastListItems = document.querySelector('#podcastList').innerHTML = null;
+		
+		//Display podcasts
+		var retrievedObject = localStorage.getItem('podcastData');
+        var podcastObject = JSON.parse(retrievedObject);
+        
+        for(var i = 0; i < podcastObject.podcasts.length; i++){
+            console.log(podcastObject.podcasts[i].title);
+			
+			var podcastListItems = document.querySelector('#podcastList');
+			var Podcasts = 	"<li class='table-view-cell media'>                                                                                                                             	<a class='navigate-right' id='btn"+i+"'><img class='media-object pull-left' src='http://placehold.it/64x64' alt='Placeholder image for Argo's poster'/>                                                                                                                            <div class='media-body'>"+podcastObject.podcasts[i].title+"<p>2 Episodes Available</p></div></a></li>"
+		podcastListItems.innerHTML += Podcasts;
+		
+		document.querySelector("#btn"+i+"").addEventListener("touchstart", showPodcastPage);
+        }
+		
+		
+	}else{
+		//Clear existing data
+		var podcastListItems = document.querySelector('#podcastList').innerHTML = null;
+		
+		var podcastListItems = document.querySelector('#podcastList');
+		var noPodcasts = 	"<li class='table-view-cell media'>                                                                                                                             	<a class='navigate-right' id='btn'>                                                                                                                            <div class='media-body'>No Podasts Found</div></a></li>"
+
+		podcastListItems.innerHTML += noPodcasts;
+
+	}
+	
+}
+
 //////////////////   Search //////////////////////
 function captureForm(form){
 	console.log('FORM');
@@ -325,6 +362,7 @@ function savePodcastData(pod){
     localStorage.setItem('podcastData', JSON.stringify(podcastList));
     console.log("set local storage successfully");
     
+    displayPodcasts();
 }
 
 ////////////////// Test ///////////////////////
