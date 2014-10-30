@@ -1,10 +1,9 @@
 /*TODO: 
-- localstorage object could have a boolean to say if files were successfully downloaded
 - what if one podcast downloads and the other fails
-- handle download queue when device is offline
-- will the download queue persist when app is terminated
-- get thumbnail(s) and store them with podcasts
-- find better naming convention for podcast episodes?
+- get thumbnail(s) and store them with podcasts base 64
+- delete podcast when done downloading
+- implement media player page
+- implement podcast episodes page
 */
 
 
@@ -96,16 +95,16 @@ function captureForm(form){
 	networkState = navigator.connection.type;
 
     var searchURL = form.search.value;
-	console.log(searchURL);
+	console.log("network state: " + networkState);
     
     // this if statement not working
 	if(networkState == "none"){
 		// no connection
-		alert('No coneection ' + networkState);
+		alert('No connection, will download on reconnection');
         downloadQueue.push(searchURL);
 	}else{
 		// connection
-		alert('Connection ' + networkState);
+		alert('Downloading podcasts...');
         loadXML(searchURL);
 	}
 	
@@ -126,7 +125,9 @@ function onOnline() {
 	networkState = navigator.connection.type;
 	console.log('Online ' + networkState);
     
+    console.log("attempting to check downloadQueue");
     if (downloadQueue.length > 0){
+        console.log("there is a download queue");
         for(var i=0; i < downloadQueue.length; i++){
             loadXML(downloadQueue[i]);
         }
@@ -240,10 +241,12 @@ function loadXML(link) {
            }
            else if(xmlhttp.status == 400) {
               console.log('There was an error 400')
+              alert("Not a valid podcast link");
            }
            else {
                console.log('something else other than 200 was returned')
                console.log(xmlhttp.status);
+               alert("Not a valid podcast link");
            }
         }
     }
@@ -354,4 +357,24 @@ function savePodcastData(pod){
     console.log("set local storage successfully");
     
     displayPodcasts();
+}
+
+///////////////  Get Podcast Data Object /////////////////
+function getPod()
+{
+    
+    var retrievedObject;
+    var podcastList = null;
+    
+    if (localStorage.getItem('podcastData')){
+        retrievedObject = localStorage.getItem('podcastData');
+        console.log("retrieved object successfully");
+        podcastList = JSON.parse(retrievedObject);
+    }
+    
+    else{
+        console.log("no podcast data");
+    }
+    
+    return podcastList;
 }
