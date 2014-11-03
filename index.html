@@ -15,7 +15,6 @@
     <link href="css/ratchet.css" rel="stylesheet"/>
 	<link href="css/ratchet-theme-android.min.css" rel="stylesheet"/>
     <!-- Include the compiled Ratchet JS -->
-    <script src="js/ratchet.min.js"></script>
 	<script type="text/javascript" src="js/index.js"></script>
 	<script src="cordova.js"></script>
     <script src="js/jquery-1.11.0.min.js"></script>
@@ -43,20 +42,22 @@
 	  
 	<div id="podPage" class=" notActive1 content">
 	 	<header class="bar bar-nav" style="padding-bottom:20px;">
-			<h1 class="title">  <span class="icon icon-left-nav btn-primary" id="btn2"></span> Selected Podcast</h1>
+			<h1 class="title">  <span class="icon icon-left-nav btn-primary" id="backBTN"></span> Selected Podcast</h1>
 	  	</header>
 
-		<ul class="table-view-cell media" style="padding-top: 45px">
-			<li class="table-view-cell media">
-			  <a class="navigate-right" data-transition="slide-in" id="btn2">
-				<img class="media-object pull-left" src="http://placehold.it/64x64" alt="Placeholder image for Argo's poster">
-				<div class="media-body">
-				  werego
-				  <p>Lwerwertur.</p>
-				</div>
-			  </a>
-			</li>
+		<ul class="table-view-cell media" style="padding-top: 45px" id="podcastPageList">
+			
 		</ul>	
+	
+		<div class="bar bar-standard bar-footer">
+		  
+			<a class="icon icon-forward pull-right spacer" id="fastForward"></a>
+			<a class="icon icon-pause pull-right spacer invisable" id="pause"></a>
+			<a class="icon icon-refresh pull-left spacer" id="rewind"></a>
+			<a class="icon icon-play pull-left spacer" id="play"></a>
+
+		</div>
+		
 	</div>
 
   </body>
