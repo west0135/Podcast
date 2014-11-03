@@ -1,10 +1,7 @@
 /*TODO: 
-- localstorage object could have a boolean to say if files were successfully downloaded
-- what if one podcast downloads and the other fails
-- handle download queue when device is offline
-- will the download queue persist when app is terminated
 - get thumbnail(s) and store them with podcasts
-- find better naming convention for podcast episodes?
+- implement media player page
+- implement podcast episodes page
 */
 
 
@@ -14,10 +11,9 @@ window.addEventListener("DOMContentLoaded", init);
 //////////////////// Global Variables ///////////////
 var networkState = null;
 var searchURL = "";
-var linkToGrab = "http://developer.android.com/assets/images/home/ics-android.png";
-var locationToPlace = "file://sdcard/ics-android.png";
 var foundDir = false;
 var downloadQueue = [];
+var downloadCount = 0;
 
 function init(){
 	document.addEventListener("deviceready", onDeviceReady, false);
@@ -96,16 +92,16 @@ function captureForm(form){
 	networkState = navigator.connection.type;
 
     var searchURL = form.search.value;
-	console.log(searchURL);
+	console.log("network state: " + networkState);
     
     // this if statement not working
 	if(networkState == "none"){
 		// no connection
-		alert('No coneection ' + networkState);
+		alert('No connection, will download on reconnection');
         downloadQueue.push(searchURL);
 	}else{
 		// connection
-		alert('Connection ' + networkState);
+		alert('Downloading podcasts...please be patient, this may take a while');
         loadXML(searchURL);
 	}
 	
@@ -126,7 +122,9 @@ function onOnline() {
 	networkState = navigator.connection.type;
 	console.log('Online ' + networkState);
     
+    console.log("attempting to check downloadQueue");
     if (downloadQueue.length > 0){
+        console.log("there is a download queue");
         for(var i=0; i < downloadQueue.length; i++){
             loadXML(downloadQueue[i]);
         }
@@ -153,7 +151,7 @@ function createDirectory(input){
     } 
 }
 
-///////////////////// Check if a Directory exists /////////////////////
+///////////////////// Check if a Directory exists NOT NEEDED ANYMORE?/////////////////////
 function checkDirectory(input){
 
     window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onRequestFileSystemSuccess, null); 
@@ -188,7 +186,8 @@ function checkDirectory(input){
 
 /****files are saved to /data/data/io.appname/podcastname
 */
-function downloadFile(linkToGrab, locationToPlace){
+function downloadFile(linkToGrab, locationToPlace, pod){
+    
     var localPath;
     window.requestFileSystem(LocalFileSystem.PERSISTENT, 0,
              function onFileSystemSuccess(fileSystem){
@@ -204,6 +203,7 @@ function downloadFile(linkToGrab, locationToPlace){
                         linkToGrab,localPath,function(theFile){
                             console.log("download complete: " + theFile.toURI());
                             showLink(theFile.toURI());
+                            countDownloads(pod);
                         },
 
                         function(error) {
@@ -240,10 +240,12 @@ function loadXML(link) {
            }
            else if(xmlhttp.status == 400) {
               console.log('There was an error 400')
+              alert("Not a valid podcast link");
            }
            else {
                console.log('something else other than 200 was returned')
                console.log(xmlhttp.status);
+               alert("Not a valid podcast link");
            }
         }
     }
@@ -280,7 +282,7 @@ function parseXML(txt) {
 
 ////////////////// Manages Podcast Organization //////////////////
 function managePodcasts(pod){
-    
+    var formattedTitle;
 //------OBJECT TEMPLATE-------//
     //var pod = {title:"podcast", episodes:[{title:"ep1", duration:"1:00", thumb:"th.jpg", link:"link.mp3"},{title:"ep2", duration:"2:00", thumb:"th2.jpg", link:"link2.mp3"}]}
     
@@ -289,10 +291,16 @@ function managePodcasts(pod){
     console.log("about to check dir");
     
     if (!checkIfExists(pod.title)){
-        createDirectory(pod.title);
-        downloadFile(pod.episodes[0].link, (pod.title+"/episode1.mp3"));
-        downloadFile(pod.episodes[1].link, (pod.title+"/episode2.mp3"));
-        savePodcastData(pod);
+        formattedTitle = removeAllSpaces(pod.title);
+        createDirectory(formattedTitle);
+        downloadFile(pod.episodes[0].link, (formattedTitle+"/episode1.mp3"), pod);
+        downloadFile(pod.episodes[1].link, (formattedTitle+"/episode2.mp3"), pod);
+        
+        //window.addEventListener("bothDone", function(){
+            //savePodcastData(pod);
+            //console.log("YOU DID IT BIG BOY!!!!");
+            //},false)
+        
     }
     
     else{
@@ -300,6 +308,13 @@ function managePodcasts(pod){
     }
 }
 
+function countDownloads(pod){
+    downloadCount++;
+    if (downloadCount>=2){
+        downloadCount=0;
+        savePodcastData(pod);
+    }
+}
 //////////////// Checks if podcast exists ///////////////////////
 function checkIfExists(title){
 
@@ -354,4 +369,127 @@ function savePodcastData(pod){
     console.log("set local storage successfully");
     
     displayPodcasts();
+}
+
+///////////////  Get Podcast Data Object /////////////////
+function getPod()
+{
+    
+    var retrievedObject;
+    var podcastList = null;
+    
+    if (localStorage.getItem('podcastData')){
+        retrievedObject = localStorage.getItem('podcastData');
+        console.log("retrieved object successfully");
+        podcastList = JSON.parse(retrievedObject);
+    }
+    
+    else{
+        console.log("no podcast data");
+    }
+    
+    return podcastList;
+}
+
+////////////// Remove Podcast /////////////////
+//MAKE SURE TO PASS UNFORMATTED TITLE
+function removeFile(podcastName, episodeNumber){
+    var formattedTitle = removeAllSpaces(podcastName);
+    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function onFileSystemSuccess(fileSystem){
+                             fileSystem.root.getFile(formattedTitle+"/episode"+episodeNumber+".mp3", 
+                                                     {create: false, exclusive: false}, gotRemoveFileEntry, deleteFail);
+                                removePodcastData(podcastName, episodeNumber);//UNFORMATTED NAME
+                             }                       
+                             , fail);
+    
+}
+
+function gotRemoveFileEntry(fileEntry){
+    //console.log(fileEntry);
+    fileEntry.remove(deleteSuccess, deleteFail);
+}
+
+function deleteSuccess(entry) {
+    console.log("Removal succeeded");
+}
+
+function deleteFail(error) {
+    console.log("Error removing file: " + error.code);
+}
+
+//////////// Remove Podcast Data ////////////////
+
+function removePodcastData(podcastName, episodeNumber){
+    console.log("Removing data now");
+//{"podcasts":[{"title":"Thrilling Adventure Hour","episodes":[{"title":"Bonus Episode: Thrilling Adventure Hour and Wits Crossover!","duration":"55:06","thumb":"","link":"http://traffic.libsyn.com/thrillingadventurehour/tahbonus_wits_crossover.mp3"},{"title":"#187: Desdemona Hughes, Diva Detective, in “Lights! Camera! Murder!”","duration":"26:47","thumb":"","link":"http://traffic.libsyn.com/thrillingadventurehour/tah187_murder.mp3"}]}]}
+    var pod = getPod();
+    var podIndex;
+    
+    if (localStorage.getItem('podcastData')){
+        var retrievedObject = localStorage.getItem('podcastData');
+        var podcastObject = JSON.parse(retrievedObject);
+        console.log("found podcast data");
+        
+        for(var i = 0; i < podcastObject.podcasts.length; i++){
+            if (podcastObject.podcasts[i].title == podcastName){
+                podIndex = i;
+                console.log("found podcast in data");
+                if (episodeNumber==1)
+                {
+                    console.log("array length before 1 splice "+podcastObject.podcasts[i].episodes.length);
+                    podcastObject.podcasts[i].episodes.splice(0, 1);
+                    
+                    console.log("removed first episode from local storage");
+                    console.log("array length after 1 splice "+podcastObject.podcasts[i].episodes.length);
+                    //podcastObject.podcasts[i].episodes[0].remove;
+                }
+                
+                else{
+                    if (podcastObject.podcasts[i].episodes.length==1)
+                    {
+                        console.log("array length before 2 splice "+podcastObject.podcasts[i].episodes.length);
+                        podcastObject.podcasts[i].episodes.splice(0, 1);
+                        console.log("removed second episode from local storage zero condition");
+                        console.log("array length after 2 splice "+podcastObject.podcasts[i].episodes.length);
+                        //podcastObject.podcasts[i].episodes[0].remove;
+                    }
+                    else{
+                        console.log("array length before 3 splice "+podcastObject.podcasts[i].episodes.length);
+                        podcastObject.podcasts[i].episodes.splice(1, 1);
+                        console.log("removed second episode from local storage one condition");
+                        console.log("array length after 3 splice "+podcastObject.podcasts[i].episodes.length);
+                        //podcastObject.podcasts[i].episodes[1].remove;
+                    }
+                
+                }
+            }
+        }
+        console.log("array length before remove all "+podcastObject.podcasts[podIndex].episodes.length);
+        if (podcastObject.podcasts[podIndex].episodes.length == 0)
+        {
+            podcastObject.podcasts.splice(podIndex, 1);
+            console.log("removed podcast from local storage");
+        }
+        
+        localStorage.setItem('podcastData', JSON.stringify(podcastObject));
+        console.log("array length saved");
+        
+        console.log("podcast list length "+podcastObject.podcasts.length);
+        if (podcastObject.podcasts.length == 0)
+        {
+            localStorage.removeItem('podcastData');
+            console.log("removed all local storage");
+        }
+    }
+    
+    else{
+        return false;
+    }
+}
+
+////////////////Removes all spaces from a string/////////////////
+function removeAllSpaces(input){
+    var output = "";
+    output = input.replace(/ /g,'');
+    return output;
 }
