@@ -1,7 +1,8 @@
 /*TODO: 
-- get thumbnail(s) and store them with podcasts
-- implement media player page
-- implement podcast episodes page
+- Fix media player formatting
+- Add click listeners for individual episodes
+- Add data to episodes to tell which one is playing
+- send through remove data
 */
 
 
@@ -16,6 +17,7 @@ var downloadQueue = [];
 var downloadCount = 0;
 var my_media = null;
 var mediaTimer = null;
+var currentMedia = {};
 
 function init(){
 	document.addEventListener("deviceready", onDeviceReady, false);
@@ -58,19 +60,28 @@ function showHomePage(ev){
 
 /////////////////// Page Setup ////////////////////
 function displayPodcastPage(podNumber){
-	
+	var podcastTitle;
+    var unformattedTitle;
+    var episodeNumber;
 	var retrievedObject = localStorage.getItem('podcastData');
     var podcastObject = JSON.parse(retrievedObject);
-	
-	
+	currentMedia.podNumber = podNumber;
+	unformattedTitle = podcastObject.podcasts[podNumber].title;
+    currentMedia.podcastTitle = unformattedTitle;
+    currentMedia.episodeNumber = 1;
+    
+    var podcastListItems = document.querySelector('#podcastPageList').innerHTML = null;
+    
+    podcastTitle = removeAllSpaces(unformattedTitle);
 	for(var i = 0; i < podcastObject.podcasts[podNumber].episodes.length; i++){
+            episodeNumber = i+1;
             console.log(podcastObject.podcasts[podNumber].episodes[i].title);
 			var podcastListItems = document.querySelector('#podcastPageList');
-			var Podcasts = 	"<li class='table-view-cell media'>                                                                                                                             	<a class='navigate-right' id='btn"+i+"' onClick=''><img class='media-object pull-left' src='http://placehold.it/64x64' alt='Placeholder image for Argo's poster'/>                                                                                                                            <div class='media-body'>"+podcastObject.podcasts[podNumber].episodes[i].title+"</div></a></li>"
+			var Podcasts = 	"<li class='table-view-cell media'>                                                                                                                             	<a class='navigate-right' id='btn"+i+"' onClick='initializeMedia('file:///data/data/io.cordova.hellocordova/"+podcastTitle+"/episode"+episodeNumber+".mp3'"+unformattedTitle+","+episodeNumber+")'><img class='media-object pull-left' src='http://placehold.it/64x64' alt='Placeholder image for Argo's poster'/>                                                                                                                            <div class='media-body'>"+podcastObject.podcasts[podNumber].episodes[i].title+"</div></a></li>"
 			podcastListItems.innerHTML += Podcasts;
         }
-	
-	initializeMedia("file:///data/data/io.cordova.hellocordova/ThrillingAdventureHour/episode1.mp3");
+
+	initializeMedia("file:///data/data/io.cordova.hellocordova/"+podcastTitle+"/episode1.mp3",unformattedTitle,episodeNumber);
 	
 }
 
@@ -495,6 +506,11 @@ function removePodcastData(podcastName, episodeNumber){
         {
             podcastObject.podcasts.splice(podIndex, 1);
             console.log("removed podcast from local storage");
+            showHomePage();
+        }
+        
+        else{
+            displayPodcastPage(currentMedia.podNumber);
         }
         
         localStorage.setItem('podcastData', JSON.stringify(podcastObject));
@@ -521,9 +537,11 @@ function removeAllSpaces(input){
 }
 
 ///////////////////////////// Media Player Events ////////////////////
-function initializeMedia(src){
+function initializeMedia(src,podcastTitle,episodeNumber){
 	
 	my_media = new Media(src, onSuccess, onError);
+    currentMedia.podcastTitle=podcastTitle;
+    currentMedia.episodeNumber=episodeNumber;
 	
 }
 function playClicked(ev){
@@ -627,8 +645,9 @@ function playAudio() {
 					else{
 						alert('Done Playing');	
 						//removeFile("Thrilling Adventure Hour",2);
+                        removeFile(currentMedia.podcastTitle,currentMedia.episodeNumber);
 						clearInterval(mediaTimer);
-						//removeFile();
+						
 						//break;
 					}   
             },
@@ -652,7 +671,7 @@ function pauseAudio() {
 function seekPositon(seconds) {
       if (Player.media === null)
          return;
- 
+    
       Player.media.seekTo(seconds * 1000);
       Player.updateSliderPosition(seconds);
    }
