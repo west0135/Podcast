@@ -731,7 +731,6 @@ input[type="button"] {
 
 .table-view-cell {
   position: relative;
-  min-width:400px;
   padding: 11px 65px 11px 15px;
   overflow: hidden;
   border-bottom: 1px solid #ddd;
@@ -1433,4 +1432,31 @@ select {
 
 .icon-left:before {
   content: '\e822';
+}
+
+.center {
+	width:100px;
+   height: 100%;
+   margin: 0 auto;
+}
+
+.spacer {
+	padding-left: 10%;
+	padding-right: 15%;
+}
+
+#progressBar { 
+   border:1px solid #aaa; 
+   color:#fff; 
+   width:295px; 
+   height:20px;
+}
+#progress {
+   background-color:#ff0000; // red
+   height:20px;
+   display:inline-block;
+}
+
+.invisable {
+	display: none;
 }

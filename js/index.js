@@ -14,6 +14,8 @@ var searchURL = "";
 var foundDir = false;
 var downloadQueue = [];
 var downloadCount = 0;
+var my_media = null;
+var mediaTimer = null;
 
 function init(){
 	document.addEventListener("deviceready", onDeviceReady, false);
@@ -22,22 +24,27 @@ function init(){
 function onDeviceReady() {
     // Now safe to use device APIs
 	console.log("Device Ready!!");
-	// Event listeners
-	document.querySelector("#btn2").addEventListener("touchstart", showHomePage);
+	//////////////////////// Event listeners /////////////////////////////
+	document.querySelector("#backBTN").addEventListener("touchstart", showHomePage);
+	document.querySelector("#play").addEventListener("touchend", playClicked);
+	document.querySelector("#pause").addEventListener("touchend", pauseClicked);
+	document.querySelector("#rewind").addEventListener("touchend", rewindClicked);
+	document.querySelector("#fastForward").addEventListener("touchend", forwardClicked);
 	document.addEventListener("offline", onOffline, false);
 	document.addEventListener("online", onOnline, false);
-    //loadXML();//Just to test the loadXML function
+    
     displayPodcasts();
-    //var buttonToClick = document.querySelector("#downloadImage");
-    //buttonToClick.addEventListener('click', downloadFileStart, false);
 	
 }
 //////////////////  Page Changes ////////////////////////
-function showPodcastPage(ev){
-	ev.preventDefault();
+function showPodcastPage(podNumber){
+
 	console.log('Go Podcast Page');
 	document.querySelector('#podPage').className = "Active content";
 	document.querySelector('#homePage').className = "notActive content";
+	
+	displayPodcastPage(podNumber);
+	
 }
 
 function showHomePage(ev){
@@ -45,10 +52,28 @@ function showHomePage(ev){
 	console.log('Go Home');
 	document.querySelector('#podPage').className = "notActive1 content";
 	document.querySelector('#homePage').className = "Active1 content";
+	document.querySelector('#podcastPageList').innerHTML = null;
 	
 }
 
 /////////////////// Page Setup ////////////////////
+function displayPodcastPage(podNumber){
+	
+	var retrievedObject = localStorage.getItem('podcastData');
+    var podcastObject = JSON.parse(retrievedObject);
+	
+	
+	for(var i = 0; i < podcastObject.podcasts[podNumber].episodes.length; i++){
+            console.log(podcastObject.podcasts[podNumber].episodes[i].title);
+			var podcastListItems = document.querySelector('#podcastPageList');
+			var Podcasts = 	"<li class='table-view-cell media'>                                                                                                                             	<a class='navigate-right' id='btn"+i+"' onClick=''><img class='media-object pull-left' src='http://placehold.it/64x64' alt='Placeholder image for Argo's poster'/>                                                                                                                            <div class='media-body'>"+podcastObject.podcasts[podNumber].episodes[i].title+"</div></a></li>"
+			podcastListItems.innerHTML += Podcasts;
+        }
+	
+	initializeMedia("file:///data/data/io.cordova.hellocordova/ThrillingAdventureHour/episode1.mp3");
+	
+}
+
 function displayPodcasts(){
 	console.log("display podcasts");
 	if (localStorage.getItem('podcastData')){
@@ -65,10 +90,11 @@ function displayPodcasts(){
             console.log(podcastObject.podcasts[i].title);
 			
 			var podcastListItems = document.querySelector('#podcastList');
-			var Podcasts = 	"<li class='table-view-cell media'>                                                                                                                             	<a class='navigate-right' id='btn"+i+"'><img class='media-object pull-left' src='http://placehold.it/64x64' alt='Placeholder image for Argo's poster'/>                                                                                                                            <div class='media-body'>"+podcastObject.podcasts[i].title+"<p>2 Episodes Available</p></div></a></li>"
+			var Podcasts = 	"<li class='table-view-cell media'>                                                                                                                             	<a class='navigate-right' id='btn"+i+"' onClick='showPodcastPage("+i+")'><img class='media-object pull-left' src='http://placehold.it/64x64' alt='Placeholder image for Argo's poster'/>                                                                                                                            <div class='media-body'>"+podcastObject.podcasts[i].title+"<p>2 Episodes Available</p></div></a></li>"
 		podcastListItems.innerHTML += Podcasts;
 		
-		document.querySelector("#btn"+i+"").addEventListener("touchstart", showPodcastPage);
+		//document.querySelector("#btn"+i+"").addEventListener("touchstart", showPodcastPage);
+		console.log("#btn"+i+" Event Listener Added");
         }
 		
 		
@@ -400,7 +426,7 @@ function removeFile(podcastName, episodeNumber){
                                                      {create: false, exclusive: false}, gotRemoveFileEntry, deleteFail);
                                 removePodcastData(podcastName, episodeNumber);//UNFORMATTED NAME
                              }                       
-                             , fail);
+                             , deleteFail);
     
 }
 
@@ -492,4 +518,150 @@ function removeAllSpaces(input){
     var output = "";
     output = input.replace(/ /g,'');
     return output;
+}
+
+///////////////////////////// Media Player Events ////////////////////
+function initializeMedia(src){
+	
+	my_media = new Media(src, onSuccess, onError);
+	
+}
+function playClicked(ev){
+	ev.preventDefault();
+	//change play button into pause button
+	document.querySelector("#play").className = "icon icon-play pull-left spacer invisable";
+	document.querySelector("#pause").className = "icon icon-pause spacer";	
+	//console.log('Play Podcast');
+	
+	//get title of podcast this being played
+	
+	playAudio();
+	
+}
+
+function pauseClicked(ev){
+	ev.preventDefault();
+	//change play button into pause button
+	document.querySelector("#pause").className = "icon icon-pause pull-left spacer invisable";
+	document.querySelector("#play").className = "icon icon-play pull-left spacer";	
+	console.log('Pause Pressed');
+	
+	pauseAudio();
+
+}
+
+function rewindClicked(ev){
+	ev.preventDefault();
+	console.log('Rewind Pressed');
+	
+	// Update media position every second
+   
+        // get media position
+        my_media.getCurrentPosition(
+            // success callback
+            function(position) {
+                if (position > -1) {
+                    console.log((position) + " sec");
+					    var rewind = ((position*1000)-10000);
+						console.log(rewind);
+						my_media.seekTo(rewind);
+                }
+            },
+            // error callback
+            function(e) {
+                console.log("Error getting pos=" + e);
+            }
+        );
+  
+	
+}
+
+function forwardClicked(ev){
+	ev.preventDefault();
+	
+	// get media position
+        my_media.getCurrentPosition(
+            // success callback
+            function(position) {
+                if (position > -1) {
+                    console.log((position) + " sec");
+					    var rewind = ((position*1000)+30000);
+						console.log(rewind);
+						my_media.seekTo(rewind);
+                }
+            },
+            // error callback
+            function(e) {
+                console.log("Error getting pos=" + e);
+            }
+        );
+	
+	
+	
+}
+
+function playAudio() {
+	console.log("Play Pod");
+	// Create Media object from src
+	
+	// Play audio
+	my_media.play();
+	
+		mediaTimer = setInterval(function() {
+        // get media position
+        my_media.getCurrentPosition(
+            // success callback
+            function(position) {
+				
+					var dur = my_media.getDuration();
+					var durMil = dur * 1000;
+					console.log(durMil+" duration");
+				
+             		var positionMil = position * 1000;
+                    console.log((positionMil) + " Milisec");
+					
+					if(positionMil < durMil){
+					
+						console.log('Less then duration'+durMil);
+					}
+					else{
+						alert('Done Playing');	
+						//removeFile("Thrilling Adventure Hour",2);
+						clearInterval(mediaTimer);
+						//removeFile();
+						//break;
+					}   
+            },
+            // error callback
+            function(e) {
+                console.log("Error getting pos=" + e);
+            }
+        );
+    }, 1000);
+	
+}
+
+// Pause audio
+function pauseAudio() {
+	if (my_media) {
+		 my_media.pause();
+		 clearInterval(mediaTimer);
+	}
+}
+
+function seekPositon(seconds) {
+      if (Player.media === null)
+         return;
+ 
+      Player.media.seekTo(seconds * 1000);
+      Player.updateSliderPosition(seconds);
+   }
+
+////////////////////////// Media Player Calls //////////////////////
+function onSuccess() {
+            console.log("playAudio():Audio Success");
+        }
+function onError(error) {
+	alert('code: '    + error.code    + '\n' +
+		  'message: ' + error.message + '\n');
 }
