@@ -1,5 +1,4 @@
 /*TODO: 
-- Find out why storage location differs on different devices
 - Find out why pages aren't clearing properly
 */
 
@@ -15,6 +14,7 @@ var downloadCount = 0;                  //counter to tell when both episodes are
 var my_media = null;                    //media object
 var mediaTimer = null;                  //media timer
 var currentMedia = {};                  //Object that contains data about currently playing podcast
+var dataToRemove = {};
 
 function init(){
 	document.addEventListener("deviceready", onDeviceReady, false);
@@ -23,6 +23,7 @@ function init(){
 function onDeviceReady() {
     // Now safe to use device APIs
 	console.log("Device Ready!!");
+    console.log(cordova.file.dataDirectory);
     
 	//////////////////////// Event listeners /////////////////////////////
 	document.querySelector("#backBTN").addEventListener("touchstart", showHomePage);
@@ -70,9 +71,16 @@ function displayPodcastPage(podNumber){
     podcastTitle = removeAllSpaces(unformattedTitle);
 
     console.log("CLEARING ALL ITEMS ON PAGE, REBUILD");
-    var podcastListItems = document.querySelector('#podcastPageList');
+    // var podcastListItems = document.querySelector('#podcastPageList');
+    var podcastListItems = document.getElementById('podcastPageList');
+    console.log(podcastListItems);
     podcastListItems.innerHTML = "";
     
+    //while (podcastListItems.firstChild) {
+    //    podcastListItems.removeChild(podcastListItems.firstChild);
+    //}
+    
+    console.log("Number of podcasts left: "+podcastObject.podcasts[podNumber].episodes.length); // 2 the second time
     //Loop through all the podcast episodes and display them on the page//
 	for(var i = 0; i < podcastObject.podcasts[podNumber].episodes.length; i++){
             episodeNumber = podcastObject.podcasts[podNumber].episodes[i].episodeNumber;
@@ -82,17 +90,17 @@ function displayPodcastPage(podNumber){
             var Podcasts = 	"<li class='table-view-cell media'>                                                                                                                             	<a class='navigate-right' id='btn"+i+"' onClick=\"initializeInitMedia('"+unformattedTitle+"','"+episodeNumber+"')\"><img class='media-object pull-left' src='http://placehold.it/64x64' alt='Placeholder image for Argo's poster'/>                                                                                                                            <div class='media-body'>"+podcastObject.podcasts[podNumber].episodes[i].title+"</div></a></li>";
 			podcastListItems.innerHTML += Podcasts;
         }
-
+    
     //This logic structure determines which episode should be on auto play
     if(podcastObject.podcasts[podNumber].episodes[0].episodeNumber==1){
-        initializeMedia("file:///data/data/io.cordova.hellocordova/"+podcastTitle+"/episode1.mp3",unformattedTitle,1);
+        initializeMedia(cordova.file.dataDirectory+podcastTitle+"/episode1.mp3",unformattedTitle,1);
         currentMedia.podNumber = podNumber;
         currentMedia.podcastTitle = unformattedTitle;
         currentMedia.episodeNumber = 1;
         
     }
     else{
-        initializeMedia("file:///data/data/io.cordova.hellocordova/"+podcastTitle+"/episode2.mp3",unformattedTitle,2);
+        initializeMedia(cordova.file.dataDirectory+podcastTitle+"/episode2.mp3",unformattedTitle,2);
         currentMedia.podNumber = podNumber;
         currentMedia.podcastTitle = unformattedTitle;
         currentMedia.episodeNumber = 2;
@@ -107,7 +115,7 @@ function initializeInitMedia(podcastTitle,episodeNumber){
     var pod = getPod();
     var formattedTitle = removeAllSpaces(podcastTitle);
     
-    initializeMedia("file:///data/data/io.cordova.hellocordova/"+formattedTitle+"/episode"+episodeNumber+".mp3",podcastTitle,episodeNumber);
+    initializeMedia(cordova.file.dataDirectory+formattedTitle+"/episode"+episodeNumber+".mp3",podcastTitle,episodeNumber);
 }
 
 //This function creates the main podcast list page
@@ -266,7 +274,9 @@ function downloadFile(linkToGrab, locationToPlace, pod){
                 function gotFileEntry(fileEntry){
                     var fileTransfer = new FileTransfer();
                     fileEntry.remove();
-                    localPath = fileSystem.root.toURL() + locationToPlace;
+                    //localPath = fileSystem.root.toURL() + locationToPlace;
+                    localPath = cordova.file.dataDirectory + locationToPlace;
+                    
                     fileTransfer.download(
                         linkToGrab,localPath,function(theFile){
                             console.log("download complete: " + theFile.toURI());
@@ -460,13 +470,8 @@ function getPod()
 function removeFile(podcastName, episodeNumber){
     console.log("Removing Episode "+episodeNumber);
     var formattedTitle = removeAllSpaces(podcastName);
-    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function onFileSystemSuccess(fileSystem){
-                             fileSystem.root.getFile(formattedTitle+"/episode"+episodeNumber+".mp3", 
-                                                     {create: false, exclusive: false}, gotRemoveFileEntry, deleteFail);
-                                removePodcastData(podcastName, episodeNumber);//UNFORMATTED NAME
-
-                             }                       
-                             , deleteFail);
+    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, deleteSuccesses, deleteFail);
+    window.resolveLocalFileSystemURL(cordova.file.dataDirectory + formattedTitle+"/episode"+episodeNumber+".mp3", gotRemoveFileEntry, deleteFail);
     
 }
 
@@ -475,8 +480,13 @@ function gotRemoveFileEntry(fileEntry){
     fileEntry.remove(deleteSuccess, deleteFail);
 }
 
+function deleteSuccesses(entry) {
+    console.log("Bugfix");
+}
+
 function deleteSuccess(entry) {
     console.log("Removal succeeded");
+    removePodcastData(dataToRemove.podcastTitle, dataToRemove.episodeNumber);
 }
 
 function deleteFail(error) {
@@ -500,53 +510,58 @@ function removePodcastData(podcastName, episodeNumber){
             if (podcastObject.podcasts[i].title == podcastName){
                 podIndex = i;
                 console.log("found podcast in data");
-                
+            }
+        }
                 //This part is handled differently if the episode being deleted is the first or second one
                 if (episodeNumber==1)
                 {
-                    console.log("array length before 1 splice "+podcastObject.podcasts[i].episodes.length);
-                    podcastObject.podcasts[i].episodes.splice(0, 1);
+                    console.log("array length before 1 splice "+podcastObject.podcasts[podIndex].episodes.length);
+                    podcastObject.podcasts[podIndex].episodes.splice(0, 1);
                     
                     console.log("removed first episode from local storage");
-                    console.log("array length after 1 splice "+podcastObject.podcasts[i].episodes.length);
+                    console.log("array length after 1 splice "+podcastObject.podcasts[podIndex].episodes.length);
                     //podcastObject.podcasts[i].episodes[0].remove;
                 }
                 
                 else{
                     //If the episode is the second and final one, all the positions in the array will be different.
-                    if (podcastObject.podcasts[i].episodes.length==1)
+                    if (podcastObject.podcasts[podIndex].episodes.length==1)
                     {
-                        console.log("array length before 2 splice "+podcastObject.podcasts[i].episodes.length);
-                        podcastObject.podcasts[i].episodes.splice(0, 1);
+                        console.log("array length before 2 splice "+podcastObject.podcasts[podIndex].episodes.length);
+                        podcastObject.podcasts[podIndex].episodes.splice(0, 1);
                         console.log("removed second episode from local storage zero condition");
-                        console.log("array length after 2 splice "+podcastObject.podcasts[i].episodes.length);
+                        console.log("array length after 2 splice "+podcastObject.podcasts[podIndex].episodes.length);
                     }
                     else{
-                        console.log("array length before 3 splice "+podcastObject.podcasts[i].episodes.length);
-                        podcastObject.podcasts[i].episodes.splice(1, 1);
+                        console.log("array length before 3 splice "+podcastObject.podcasts[podIndex].episodes.length);
+                        podcastObject.podcasts[podIndex].episodes.splice(1, 1);
                         console.log("removed second episode from local storage one condition");
-                        console.log("array length after 3 splice "+podcastObject.podcasts[i].episodes.length);
+                        console.log("array length after 3 splice "+podcastObject.podcasts[podIndex].episodes.length);
                     }
                 
                 }
-            }
-        }
+            
+        
         console.log("array length before remove all "+podcastObject.podcasts[podIndex].episodes.length);
         
         //If this podcast has no more episodes, remove from memory
         if (podcastObject.podcasts[podIndex].episodes.length == 0)
         {
             podcastObject.podcasts.splice(podIndex, 1);
+            localStorage.setItem('podcastData', JSON.stringify(podcastObject));
             console.log("removed podcast from local storage");
+            displayPodcasts();
             showHomePage();
         }
         
         else{
             console.log("Should be re-writing page now");
+            console.log("pre rewrite length: "+podcastObject.podcasts[podIndex].episodes.length);
+            localStorage.setItem('podcastData', JSON.stringify(podcastObject));
             displayPodcastPage(currentMedia.podNumber);
         }
         
-        localStorage.setItem('podcastData', JSON.stringify(podcastObject));
+        
         console.log("array length saved");
         
         console.log("podcast list length "+podcastObject.podcasts.length);
@@ -556,6 +571,11 @@ function removePodcastData(podcastName, episodeNumber){
         {
             localStorage.removeItem('podcastData');
             console.log("removed all local storage");
+            displayPodcasts();
+            showHomePage();
+        }
+        else{
+            localStorage.setItem('podcastData', JSON.stringify(podcastObject));
         }
     }
     
@@ -679,28 +699,34 @@ function playAudio() {
 					
 						console.log('Less then duration'+durMil);
 					}
+                
 					else{
 						alert('Done Playing');
                         document.querySelector("#pause").className = "icon icon-pause pull-left spacer invisable";
 	                    document.querySelector("#play").className = "icon icon-play pull-left spacer";
                         //Remove file when it is finished playing
+                        dataToRemove.podcastTitle = currentMedia.podcastTitle;
+                        dataToRemove.episodeNumber = currentMedia.episodeNumber;
                         removeFile(currentMedia.podcastTitle,currentMedia.episodeNumber);
 						clearInterval(mediaTimer);
                         	
 						
 						//break;
 					}
-                
                     //This handles a bug where the mediaTimer gets stuck at -1 if you skip past the end
                     if(positionMil == (-1))
                     {
                         alert('Done Playing');	
                         document.querySelector("#pause").className = "icon icon-pause pull-left spacer invisable";
-	                    document.querySelector("#play").className = "icon icon-play pull-left spacer";	
+	                    document.querySelector("#play").className = "icon icon-play pull-left spacer";
+                        dataToRemove.podcastTitle = currentMedia.podcastTitle;
+                        dataToRemove.episodeNumber = currentMedia.episodeNumber;
                         removeFile(currentMedia.podcastTitle,currentMedia.episodeNumber);
 						clearInterval(mediaTimer);
                         
                     }
+                
+                    
             },
             // error callback
             function(e) {
